@@ -168,18 +168,18 @@ public class ShaderManagerImpl implements ShaderManager {
     }
 
     @Override
-    public void createUniform(String programName, String uniformName, int val) {
+    public void createUniform(String programName, String uniformName, int value) {
         int sp = programs.get(programName);
-        GLUniformData uniformData = new GLUniformData(uniformName, val);
+        GLUniformData uniformData = new GLUniformData(uniformName, value);
         int location = gl2.glGetUniformLocation(sp, uniformName);
         uniformData.setLocation(location);
         uniforms.get(programName).put(uniformName, uniformData);
     }
 
     @Override
-    public void createUniform(String programName, String uniformName, float val) {
+    public void createUniform(String programName, String uniformName, float value) {
         int sp = programs.get(programName);
-        GLUniformData uniformData = new GLUniformData(uniformName, val);
+        GLUniformData uniformData = new GLUniformData(uniformName, value);
         int location = gl2.glGetUniformLocation(sp, uniformName);
         uniformData.setLocation(location);
         uniforms.get(programName).put(uniformName, uniformData);
@@ -210,6 +210,31 @@ public class ShaderManagerImpl implements ShaderManager {
         int location = gl2.glGetUniformLocation(sp, uniformName);
         uniformData.setLocation(location);
         uniforms.get(programName).put(uniformName, uniformData);
+    }
+
+    @Override
+    public void setUniform(String programName, String uniformName, int value) {
+        uniforms.get(programName).get(uniformName).setData(value);
+    }
+
+    @Override
+    public void setUniform(String programName, String uniformName, float value) {
+        uniforms.get(programName).get(uniformName).setData(value);
+    }
+
+    @Override
+    public void setUniform(String programName, String uniformName, int components, IntBuffer data) {
+        uniforms.get(programName).get(uniformName).setData(data);
+    }
+
+    @Override
+    public void setUniform(String programName, String uniformName, int components, FloatBuffer data) {
+        uniforms.get(programName).get(uniformName).setData(data);
+    }
+
+    @Override
+    public void setUniform(String programName, String uniformName, int rows, int columns, FloatBuffer data) {
+        uniforms.get(programName).get(uniformName).setData(data);
     }
 
     @Override
