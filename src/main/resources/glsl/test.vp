@@ -1,9 +1,10 @@
 #version 330
 
-uniform mat4 mgl_PMVMatrix[2];
+uniform mat4 projectionMatrix;
+uniform mat4 modelViewMatrix;
 
-layout (location = 0) in vec3 mgl_Vertex;
+layout (location = 0) in vec3 vertex;
 
 void main() {
-    gl_Position = mgl_PMVMatrix[0] * mgl_PMVMatrix[1] * vec4(mgl_Vertex, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(vertex, 1.0);
 }

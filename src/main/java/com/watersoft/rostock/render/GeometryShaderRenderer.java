@@ -1,6 +1,5 @@
 package com.watersoft.rostock.render;
 
-import com.jogamp.opengl.util.PMVMatrix;
 import com.jogamp.opengl.util.gl2.GLUT;
 import com.watersoft.rostock.shader.ShaderManager;
 import com.watersoft.rostock.shader.ShaderManagerImpl;
@@ -12,40 +11,27 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2ES1;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
-import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.GLU;
 
 /**
- * Created by Wouter on 12/31/2014.
+ * Created by Wouter on 1/1/2015.
  */
-public class ShaderRenderer implements GLEventListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ShaderRenderer.class);
+public class GeometryShaderRenderer implements GLEventListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeometryShaderRenderer.class);
     private GLU glu;
     private GLUT glut;
 
-    private PMVMatrix pmvMatrix;
     private ShaderManager shaderManager;
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
+        GL gl = glAutoDrawable.getGL();
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
         glu = new GLU();
         glut = new GLUT();
 
-        pmvMatrix = new PMVMatrix();
-        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
-        pmvMatrix.glLoadIdentity();
-        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
-        pmvMatrix.glLoadIdentity();
-
         shaderManager = new ShaderManagerImpl(gl2);
-        shaderManager.load("test");
-        shaderManager.createUniform("test", "projectionMatrix", 4, 4, pmvMatrix.glGetPMatrixf());
-        shaderManager.createUniform("test", "modelViewMatrix", 4, 4, pmvMatrix.glGetMvMatrixf());
-
-        shaderManager.bind("test");
-        shaderManager.commit("test");
-        shaderManager.unbind();
+        shaderManager.load("geometry");
 
         gl2.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         gl2.glClearDepth(1.0f);
@@ -68,13 +54,15 @@ public class ShaderRenderer implements GLEventListener {
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
         gl2.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
-        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
-        pmvMatrix.glLoadIdentity();
-        pmvMatrix.glTranslatef(0.0f, 0.0f, -10.0f);
+        shaderManager.bind("geometry");
 
-        shaderManager.bind("test");
-        shaderManager.commit("test");
-        glut.glutSolidTeapot(1.0);
+        gl2.glBegin(GL.GL_POINTS);
+        gl2.glVertex2f(0.45f, 0.45f);
+        gl2.glVertex2f(0.45f, -0.45f);
+        gl2.glVertex2f(-0.45f, 0.45f);
+        gl2.glVertex2f(-0.45f, -0.45f);
+        gl2.glEnd();
+
         shaderManager.unbind();
     }
 
@@ -87,17 +75,5 @@ public class ShaderRenderer implements GLEventListener {
         }
 
         gl2.glViewport(0, 0, width, height);
-
-        // float aspect = (float) width / height;
-        float aspect = 16.0f / 9.0f;
-        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
-        pmvMatrix.glLoadIdentity();
-        pmvMatrix.gluPerspective(45.0f, aspect, 0.1f, 100.0f);
-        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
-        pmvMatrix.glLoadIdentity();
-
-        shaderManager.bind("test");
-        shaderManager.commit("test");
-        shaderManager.unbind();
     }
 }

@@ -2,7 +2,7 @@ package com.watersoft.rostock;
 
 import com.jogamp.opengl.util.FPSAnimator;
 import com.watersoft.rostock.gui.MainForm;
-import com.watersoft.rostock.render.ShaderRenderer;
+import com.watersoft.rostock.render.GeometryShaderRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,8 @@ public class Launcher {
             @Override
             public void run() {
                 // GLEventListener renderer = new SimpleRenderer();
-                GLEventListener renderer = new ShaderRenderer();
+                // GLEventListener renderer = new ShaderRenderer();
+                GLEventListener renderer = new GeometryShaderRenderer();
 
                 GLProfile glProfile = GLProfile.getDefault();
                 LOGGER.debug("Logging profile information.");

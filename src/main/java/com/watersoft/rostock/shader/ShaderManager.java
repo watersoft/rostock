@@ -1,64 +1,31 @@
 package com.watersoft.rostock.shader;
 
-import com.jogamp.opengl.util.glsl.ShaderCode;
-import com.jogamp.opengl.util.glsl.ShaderProgram;
-import com.jogamp.opengl.util.glsl.ShaderState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.media.opengl.GL2ES2;
-import java.util.HashMap;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 /**
- * Created by Wouter on 12/31/2014.
+ * Created by Wouter on 1/1/2015.
  */
-public class ShaderManager implements AutoCloseable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ShaderManager.class);
-    private final GL2ES2 gl2ES2;
-    private final ShaderState shaderState;
-    private final HashMap<String, ShaderProgram> programs;
+public interface ShaderManager extends AutoCloseable {
+    void load(String name);
 
-    public ShaderManager(GL2ES2 gl2ES2) {
-        this.gl2ES2 = gl2ES2;
-        shaderState = new ShaderState();
-        shaderState.setVerbose(true);
-        programs = new HashMap<>();
-    }
+    void unload(String name);
 
-    public void unload(String name) {
-        LOGGER.debug("Unloading shader program '{}'", name);
-        programs.get(name).release(gl2ES2, true);
-        programs.remove(name);
-    }
+    void bind(String name);
 
-    public void load(String name) {
-        LOGGER.debug("Loading vertex shader '{}'", name);
-        ShaderCode vs = ShaderCode.create(gl2ES2, GL2ES2.GL_VERTEX_SHADER, this.getClass(), "/glsl", "/glsl/bin", name, true);
-        LOGGER.debug("Loading fragment shader '{}", name);
-        ShaderCode fs = ShaderCode.create(gl2ES2, GL2ES2.GL_FRAGMENT_SHADER, this.getClass(), "/glsl", "/glsl/bin", name, true);
-        ShaderProgram sp = new ShaderProgram();
-        sp.add(gl2ES2, vs, System.err);
-        sp.add(gl2ES2, fs, System.err);
-        programs.put(name, sp);
-    }
+    void unbind();
 
-    public void use(String name) {
-        shaderState.attachShaderProgram(gl2ES2, programs.get(name), true);
-    }
+    void createUniform(String programName, String uniformName, int val);
 
-    public void use(boolean on) {
-        shaderState.useProgram(gl2ES2, on);
-    }
+    void createUniform(String programName, String uniformName, float val);
 
-    public ShaderState getShaderState() {
-        return shaderState;
-    }
+    void createUniform(String programName, String uniformName, int components, IntBuffer data);
 
-    @Override
-    public void close() throws Exception {
-        shaderState.destroy(gl2ES2);
-        for (String name : programs.keySet()) {
-            unload(name);
-        }
-    }
+    void createUniform(String programName, String uniformName, int components, FloatBuffer data);
+
+    void createUniform(String programName, String uniformName, int rows, int columns, FloatBuffer data);
+
+    void commit(String programName);
+
+    void commit(String programName, String uniformName);
 }
