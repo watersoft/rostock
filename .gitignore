@@ -8,6 +8,7 @@ pom.xml.next
 release.properties
 
 # Intellij
+out/
 .idea/
 *.iml
 *.iws
