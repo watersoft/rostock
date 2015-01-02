@@ -1,6 +1,7 @@
 package com.watersoft.rostock.shader;
 
 import com.watersoft.rostock.common.FileUtils;
+import com.watersoft.rostock.common.TypeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,12 @@ public class ShaderManagerImpl implements ShaderManager {
 
     private final Map<String, Map<String, GLUniformData>> uniforms = new HashMap<>();
 
+    private final Map<String, List<String>> attributes = new HashMap<>();
+
+    private final Map<String, Map<String, Integer>> attributeTypes = new HashMap<>();
+
+    private final Map<String, Map<String, Integer>> attributeSizes = new HashMap<>();
+
     private final GL2 gl2;
 
     public ShaderManagerImpl(GL2 gl2) {
@@ -35,12 +42,12 @@ public class ShaderManagerImpl implements ShaderManager {
     }
 
     @Override
-    public void load(String name) {
+    public void load(String programName) {
         List<Integer> shaders = new ArrayList<>();
 
-        String vpPath = String.format("/glsl/%s.vp", name);
-        String gpPath = String.format("/glsl/%s.gp", name);
-        String fpPath = String.format("/glsl/%s.fp", name);
+        String vpPath = String.format("/glsl/%s.vp", programName);
+        String gpPath = String.format("/glsl/%s.gp", programName);
+        String fpPath = String.format("/glsl/%s.fp", programName);
 
         try {
             if (FileUtils.getResourceExists(vpPath)) {
@@ -64,7 +71,7 @@ public class ShaderManagerImpl implements ShaderManager {
                 }
             }
         } catch (IOException e) {
-            LOGGER.error(String.format("Failed to load vertex shader '%s'", name), e);
+            LOGGER.error(String.format("Failed to load vertex shader '%s'", programName), e);
         }
 
         try {
@@ -89,7 +96,7 @@ public class ShaderManagerImpl implements ShaderManager {
                 }
             }
         } catch (IOException e) {
-            LOGGER.error(String.format("Failed to load geometry shader '%s'", name), e);
+            LOGGER.error(String.format("Failed to load geometry shader '%s'", programName), e);
         }
 
         try {
@@ -114,11 +121,11 @@ public class ShaderManagerImpl implements ShaderManager {
                 }
             }
         } catch (IOException e) {
-            LOGGER.error(String.format("Failed to load fragment shader '%s'", name), e);
+            LOGGER.error(String.format("Failed to load fragment shader '%s'", programName), e);
         }
 
         if (shaders.size() <= 0) {
-            LOGGER.warn(String.format("Shader '%s' has no code", name));
+            LOGGER.warn(String.format("Shader '%s' has no code", programName));
         }
 
         int sp = gl2.glCreateProgram();
@@ -135,8 +142,11 @@ public class ShaderManagerImpl implements ShaderManager {
         IntBuffer intBuffer = IntBuffer.allocate(1);
         gl2.glGetProgramiv(sp, GL2ES2.GL_LINK_STATUS, intBuffer);
         if (intBuffer.get(0) == GL.GL_TRUE) {
-            programs.put(name, sp);
-            uniforms.put(name, new HashMap<String, GLUniformData>());
+            programs.put(programName, sp);
+            uniforms.put(programName, new HashMap<>());
+            attributes.put(programName, new ArrayList<>());
+            attributeTypes.put(programName, new HashMap<>());
+            attributeSizes.put(programName, new HashMap<>());
         } else {
             gl2.glGetProgramiv(sp, GL2ES2.GL_INFO_LOG_LENGTH, intBuffer);
             int size = intBuffer.get(0);
@@ -149,16 +159,19 @@ public class ShaderManagerImpl implements ShaderManager {
     }
 
     @Override
-    public void unload(String name) {
-        int sp = programs.get(name);
+    public void unload(String programName) {
+        int sp = programs.get(programName);
         gl2.glDeleteProgram(sp);
-        programs.remove(name);
-        uniforms.remove(name);
+        programs.remove(programName);
+        uniforms.remove(programName);
+        attributes.put(programName, new ArrayList<>());
+        attributeTypes.remove(programName);
+        attributeSizes.remove(programName);
     }
 
     @Override
-    public void bind(String name) {
-        int sp = programs.get(name);
+    public void bind(String programName) {
+        int sp = programs.get(programName);
         gl2.glUseProgram(sp);
     }
 
@@ -239,9 +252,7 @@ public class ShaderManagerImpl implements ShaderManager {
 
     @Override
     public void commit(String programName) {
-        for (GLUniformData uniformData : uniforms.get(programName).values()) {
-            gl2.glUniform(uniformData);
-        }
+        uniforms.get(programName).values().forEach(gl2::glUniform);
     }
 
     @Override
@@ -252,10 +263,39 @@ public class ShaderManagerImpl implements ShaderManager {
 
     @Override
     public void close() throws Exception {
-        for (int sp : programs.values()) {
-            gl2.glDeleteProgram(sp);
-        }
+        programs.values().forEach(gl2::glDeleteProgram);
         programs.clear();
         uniforms.clear();
+        attributes.clear();
+        attributeTypes.clear();
+        attributeSizes.clear();
+    }
+
+    @Override
+    public void addAttribute(String programName, String attributeName, int type, int size) {
+        attributes.get(programName).add(attributeName);
+        attributeTypes.get(programName).put(attributeName, type);
+        attributeSizes.get(programName).put(attributeName, size);
+    }
+
+    @Override
+    public void applyAttributes(String programName, VertexBufferObject vbo) {
+        vbo.bind();
+        int sum = 0;
+        for (String attribute : attributes.get(programName)) {
+            int type = attributeTypes.get(programName).get(attribute);
+            int size = attributeSizes.get(programName).get(attribute);
+            sum += TypeUtils.sizeOf(type) * size;
+        }
+        long index = 0;
+        for (String attribute : attributes.get(programName)) {
+            int type = attributeTypes.get(programName).get(attribute);
+            int size = attributeSizes.get(programName).get(attribute);
+            int location = gl2.glGetAttribLocation(programs.get(programName), attribute);
+            gl2.glEnableVertexAttribArray(location);
+            gl2.glVertexAttribPointer(location, size, type, false, sum, index);
+            index += TypeUtils.sizeOf(type) * size;
+        }
+        vbo.unbind();
     }
 }

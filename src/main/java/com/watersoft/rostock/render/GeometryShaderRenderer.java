@@ -3,6 +3,7 @@ package com.watersoft.rostock.render;
 import com.jogamp.opengl.util.gl2.GLUT;
 import com.watersoft.rostock.shader.ShaderManager;
 import com.watersoft.rostock.shader.ShaderManagerImpl;
+import com.watersoft.rostock.shader.VertexBufferObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ public class GeometryShaderRenderer implements GLEventListener {
     private GLUT glut;
 
     private ShaderManager shaderManager;
+    private VertexBufferObject vbo;
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
@@ -30,8 +32,23 @@ public class GeometryShaderRenderer implements GLEventListener {
         glu = new GLU();
         glut = new GLUT();
 
+        float points[] = {
+                0.45f, 0.45f, 1.0f, 0.0f, 0.0f, 4.0f,
+                0.45f, -0.45f, 0.0f, 1.0f, 0.0f, 8.0f,
+                -0.45f, 0.45f, 0.0f, 0.0f, 1.0f, 16.0f,
+                -0.45f, -0.45f, 1.0f, 1.0f, 0.0f, 32.0f
+        };
+        vbo = new VertexBufferObject(gl);
+        vbo.bind();
+        vbo.write(points);
+        vbo.unbind();
+
         shaderManager = new ShaderManagerImpl(gl2);
         shaderManager.load("geometry");
+        shaderManager.addAttribute("geometry", "position", GL.GL_FLOAT, 2);
+        shaderManager.addAttribute("geometry", "color", GL.GL_FLOAT, 3);
+        shaderManager.addAttribute("geometry", "sides", GL.GL_FLOAT, 1);
+        shaderManager.applyAttributes("geometry", vbo);
 
         gl2.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         gl2.glClearDepth(1.0f);
@@ -47,22 +64,24 @@ public class GeometryShaderRenderer implements GLEventListener {
         } catch (Exception e) {
             LOGGER.warn("Exception during disposal of shader loader", e);
         }
+
+        try {
+            vbo.close();
+        } catch (Exception e) {
+            LOGGER.warn("Failed to close VBO.");
+        }
     }
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
+        GL gl = glAutoDrawable.getGL();
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
         gl2.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
         shaderManager.bind("geometry");
-
-        gl2.glBegin(GL.GL_POINTS);
-        gl2.glVertex2f(0.45f, 0.45f);
-        gl2.glVertex2f(0.45f, -0.45f);
-        gl2.glVertex2f(-0.45f, 0.45f);
-        gl2.glVertex2f(-0.45f, -0.45f);
-        gl2.glEnd();
-
+        vbo.bind();
+        gl.glDrawArrays(GL.GL_POINTS, 0, 4);
+        vbo.unbind();
         shaderManager.unbind();
     }
 
