@@ -1,6 +1,5 @@
 package com.watersoft.rostock.render;
 
-import com.jogamp.opengl.util.gl2.GLUT;
 import com.watersoft.rostock.shader.ShaderManager;
 import com.watersoft.rostock.shader.ShaderManagerImpl;
 import com.watersoft.rostock.shader.VertexBufferObject;
@@ -12,19 +11,17 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2ES1;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
-import javax.media.opengl.glu.GLU;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 /**
  * Created by Wouter on 1/1/2015.
  */
-public class GeometryShaderDemoRenderer implements GLEventListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GeometryShaderDemoRenderer.class);
+public class GeometryShaderDemo implements Renderer, GLEventListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeometryShaderDemo.class);
 
     private static final String SHADER_NAME = "geometry";
-
-    private GLU glu;
-
-    private GLUT glut;
 
     private ShaderManager shaderManager;
 
@@ -34,8 +31,6 @@ public class GeometryShaderDemoRenderer implements GLEventListener {
     public void init(GLAutoDrawable glAutoDrawable) {
         GL gl = glAutoDrawable.getGL();
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
-        glu = new GLU();
-        glut = new GLUT();
 
         float points[] = {
                 0.45f, 0.45f, 1.0f, 0.0f, 0.0f, 4.0f,
@@ -99,5 +94,25 @@ public class GeometryShaderDemoRenderer implements GLEventListener {
         }
 
         gl2.glViewport(0, 0, width, height);
+    }
+
+    @Override
+    public GLEventListener getGlEventsListener() {
+        return this;
+    }
+
+    @Override
+    public MouseListener getMouseListener() {
+        return null;
+    }
+
+    @Override
+    public MouseMotionListener getMouseMotionListener() {
+        return null;
+    }
+
+    @Override
+    public KeyListener getKeyListener() {
+        return null;
     }
 }

@@ -13,17 +13,17 @@ import javax.media.opengl.GL2ES1;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.fixedfunc.GLMatrixFunc;
-import javax.media.opengl.glu.GLU;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 /**
  * Created by Wouter on 12/31/2014.
  */
-public class SimpleShaderDemoRenderer implements GLEventListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleShaderDemoRenderer.class);
+public class SimpleShaderDemo implements Renderer, GLEventListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleShaderDemo.class);
 
     private static final String SHADER_NAME = "simple";
-
-    private GLU glu;
 
     private GLUT glut;
 
@@ -34,7 +34,6 @@ public class SimpleShaderDemoRenderer implements GLEventListener {
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
-        glu = new GLU();
         glut = new GLUT();
 
         pmvMatrix = new PMVMatrix();
@@ -93,7 +92,6 @@ public class SimpleShaderDemoRenderer implements GLEventListener {
 
         gl2.glViewport(0, 0, width, height);
 
-        // float aspect = (float) width / height;
         float aspect = 16.0f / 9.0f;
         pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
         pmvMatrix.glLoadIdentity();
@@ -104,5 +102,25 @@ public class SimpleShaderDemoRenderer implements GLEventListener {
         shaderManager.bind(SHADER_NAME);
         shaderManager.commit(SHADER_NAME);
         shaderManager.unbind();
+    }
+
+    @Override
+    public GLEventListener getGlEventsListener() {
+        return this;
+    }
+
+    @Override
+    public MouseListener getMouseListener() {
+        return null;
+    }
+
+    @Override
+    public MouseMotionListener getMouseMotionListener() {
+        return null;
+    }
+
+    @Override
+    public KeyListener getKeyListener() {
+        return null;
     }
 }

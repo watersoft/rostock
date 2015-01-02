@@ -9,11 +9,14 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.fixedfunc.GLLightingFunc;
 import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.GLU;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 /**
  * Created by Wouter on 12/31/2014.
  */
-public class SimpleDemoRenderer implements GLEventListener {
+public class SimpleDemo implements Renderer, GLEventListener {
     private GLU glu;
 
     private float anglePyramid = 0;
@@ -149,5 +152,25 @@ public class SimpleDemoRenderer implements GLEventListener {
 
         gl2.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
         gl2.glLoadIdentity();
+    }
+
+    @Override
+    public GLEventListener getGlEventsListener() {
+        return this;
+    }
+
+    @Override
+    public MouseListener getMouseListener() {
+        return null;
+    }
+
+    @Override
+    public MouseMotionListener getMouseMotionListener() {
+        return null;
+    }
+
+    @Override
+    public KeyListener getKeyListener() {
+        return null;
     }
 }
