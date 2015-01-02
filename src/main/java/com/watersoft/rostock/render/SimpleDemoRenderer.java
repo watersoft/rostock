@@ -13,11 +13,15 @@ import javax.media.opengl.glu.GLU;
 /**
  * Created by Wouter on 12/31/2014.
  */
-public class SimpleRenderer implements GLEventListener {
+public class SimpleDemoRenderer implements GLEventListener {
     private GLU glu;
+
     private float anglePyramid = 0;
+
     private float angleCube = 0;
+
     private float speedPyramid = 2.0f;
+
     private float speedCube = -1.5f;
 
     @Override

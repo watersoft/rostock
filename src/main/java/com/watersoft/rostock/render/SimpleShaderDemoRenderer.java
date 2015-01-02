@@ -1,9 +1,9 @@
 package com.watersoft.rostock.render;
 
+import com.jogamp.opengl.util.PMVMatrix;
 import com.jogamp.opengl.util.gl2.GLUT;
 import com.watersoft.rostock.shader.ShaderManager;
 import com.watersoft.rostock.shader.ShaderManagerImpl;
-import com.watersoft.rostock.shader.VertexBufferObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,43 +12,45 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2ES1;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
+import javax.media.opengl.fixedfunc.GLMatrixFunc;
 import javax.media.opengl.glu.GLU;
 
 /**
- * Created by Wouter on 1/1/2015.
+ * Created by Wouter on 12/31/2014.
  */
-public class GeometryShaderRenderer implements GLEventListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GeometryShaderRenderer.class);
+public class SimpleShaderDemoRenderer implements GLEventListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleShaderDemoRenderer.class);
+
+    private static final String SHADER_NAME = "simple";
+
     private GLU glu;
+
     private GLUT glut;
 
+    private PMVMatrix pmvMatrix;
+
     private ShaderManager shaderManager;
-    private VertexBufferObject vbo;
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
-        GL gl = glAutoDrawable.getGL();
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
         glu = new GLU();
         glut = new GLUT();
 
-        float points[] = {
-                0.45f, 0.45f, 1.0f, 0.0f, 0.0f, 4.0f,
-                0.45f, -0.45f, 0.0f, 1.0f, 0.0f, 8.0f,
-                -0.45f, 0.45f, 0.0f, 0.0f, 1.0f, 16.0f,
-                -0.45f, -0.45f, 1.0f, 1.0f, 0.0f, 32.0f
-        };
-        vbo = new VertexBufferObject(gl);
-        vbo.bind();
-        vbo.write(points);
-        vbo.unbind();
+        pmvMatrix = new PMVMatrix();
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
+        pmvMatrix.glLoadIdentity();
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
+        pmvMatrix.glLoadIdentity();
 
         shaderManager = new ShaderManagerImpl(gl2);
-        shaderManager.load("geometry");
-        shaderManager.addAttribute("geometry", "position", GL.GL_FLOAT, 2);
-        shaderManager.addAttribute("geometry", "color", GL.GL_FLOAT, 3);
-        shaderManager.addAttribute("geometry", "sides", GL.GL_FLOAT, 1);
-        shaderManager.applyAttributes("geometry", vbo);
+        shaderManager.load(SHADER_NAME);
+        shaderManager.createUniform(SHADER_NAME, "projectionMatrix", 4, 4, pmvMatrix.glGetPMatrixf());
+        shaderManager.createUniform(SHADER_NAME, "modelViewMatrix", 4, 4, pmvMatrix.glGetMvMatrixf());
+
+        shaderManager.bind(SHADER_NAME);
+        shaderManager.commit(SHADER_NAME);
+        shaderManager.unbind();
 
         gl2.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         gl2.glClearDepth(1.0f);
@@ -64,24 +66,20 @@ public class GeometryShaderRenderer implements GLEventListener {
         } catch (Exception e) {
             LOGGER.warn("Exception during disposal of shader loader", e);
         }
-
-        try {
-            vbo.close();
-        } catch (Exception e) {
-            LOGGER.warn("Failed to close VBO.");
-        }
     }
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
-        GL gl = glAutoDrawable.getGL();
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
         gl2.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
-        shaderManager.bind("geometry");
-        vbo.bind();
-        gl.glDrawArrays(GL.GL_POINTS, 0, 4);
-        vbo.unbind();
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
+        pmvMatrix.glLoadIdentity();
+        pmvMatrix.glTranslatef(0.0f, 0.0f, -10.0f);
+
+        shaderManager.bind(SHADER_NAME);
+        shaderManager.commit(SHADER_NAME);
+        glut.glutSolidTeapot(1.0);
         shaderManager.unbind();
     }
 
@@ -94,5 +92,17 @@ public class GeometryShaderRenderer implements GLEventListener {
         }
 
         gl2.glViewport(0, 0, width, height);
+
+        // float aspect = (float) width / height;
+        float aspect = 16.0f / 9.0f;
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
+        pmvMatrix.glLoadIdentity();
+        pmvMatrix.gluPerspective(45.0f, aspect, 0.1f, 100.0f);
+        pmvMatrix.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
+        pmvMatrix.glLoadIdentity();
+
+        shaderManager.bind(SHADER_NAME);
+        shaderManager.commit(SHADER_NAME);
+        shaderManager.unbind();
     }
 }
